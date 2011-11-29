@@ -68,10 +68,10 @@
     (apply shell/sh (concat (or execv ["/bin/bash"]) [:in in]))))
 
 
-(defn send-file [source destination]
+(defn send-stream [source destination]
   (context/with-context
     (format "Send to %s" destination) {}
-    (io/copy (io/file source) (io/file destination))))
+    (io/copy source (io/file destination))))
 
 (defn send-text [source destination]
   (context/with-context

@@ -1,5 +1,6 @@
 (ns pallet.local.transport-test
   (:require
+   [clojure.java.io :as io]
    [pallet.common.filesystem :as filesystem]
    [pallet.common.logging.logutils :as logutils]
    [pallet.local.transport :as transport])
@@ -37,10 +38,11 @@
       (is (not (zero? (:exit result)))))))
 
 (deftest test-send
-  (testing "send-file"
+  (testing "send-stream"
     (filesystem/with-temp-file [tmp-src "src"]
       (filesystem/with-temp-file [tmp-dest "dest"]
-        (transport/send-file (.getPath tmp-src) (.getPath tmp-dest))
+        (transport/send-stream
+         (io/input-stream (.getPath tmp-src)) (.getPath tmp-dest))
         (is (= "src" (slurp tmp-dest))))))
   (testing "send-text"
     (filesystem/with-temp-file [tmp-dest "dest"]
@@ -50,9 +52,4 @@
     (filesystem/with-temp-file [tmp-src "src"]
       (filesystem/with-temp-file [tmp-dest "dest"]
         (transport/receive (.getPath tmp-src) (.getPath tmp-dest))
-        (is (= "src" (slurp tmp-dest))))))
-  (testing "send-file with non-existing path"
-    (is
-     (thrown-with-msg?
-       slingshot.Stone #"/some/non-existing/path"
-       (transport/send-file "/some/non-existing/path" "/invalid")))))
+        (is (= "src" (slurp tmp-dest)))))))

@@ -86,4 +86,14 @@
 (defn exec [code options]
   (context/with-context
     "Execute script" {}
-    (sh-script code options)))
+    (let [{:keys [exit out err] :as result} (sh-script code options)]
+      (if (zero? exit)
+        result
+        (assoc result
+          :error {:message (format
+                            "Error executing script :\n :cmd %s\n :out %s\n"
+                            code err)
+                  :type :pallet-script-excution-error
+                  :script-exit exit
+                  :script-out out
+                  :script-err err})))))

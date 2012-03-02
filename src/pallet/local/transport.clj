@@ -43,11 +43,12 @@
   (logging/tracef "sh-script %s" command)
   (if output-f
     (try
-      (let [{:keys [out err proc]} (apply
-                                    shell/sh
-                                    (concat
-                                     (or execv ["/bin/bash"]) ;; TODO generalise
-                                     [:in in :async true]))
+      (let [{:keys [out err ^Process proc]}
+            (apply
+             shell/sh
+             (concat
+              (or execv ["/bin/bash"]) ;; TODO generalise
+              [:in in :async true]))
             out-reader (read-buffer out output-f)
             err-reader (read-buffer err output-f)
             period @output-poll-period

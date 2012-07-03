@@ -43,11 +43,12 @@
   (logging/tracef "sh-script %s" command)
   (if output-f
     (try
-      (let [{:keys [out err proc]} (apply
-                                    shell/sh
-                                    (concat
-                                     (or execv ["/bin/bash"]) ;; TODO generalise
-                                     [:in in :async true]))
+      (let [{:keys [out err ^Process proc]}
+            (apply
+             shell/sh
+             (concat
+              (or execv ["/bin/bash"]) ;; TODO generalise
+              [:in in :async true]))
             out-reader (read-buffer out output-f)
             err-reader (read-buffer err output-f)
             period @output-poll-period
@@ -68,10 +69,10 @@
     (apply shell/sh (concat (or execv ["/bin/bash"]) [:in in]))))
 
 
-(defn send-file [source destination]
+(defn send-stream [source destination]
   (context/with-context
     (format "Send to %s" destination) {}
-    (io/copy (io/file source) (io/file destination))))
+    (io/copy source (io/file destination))))
 
 (defn send-text [source destination]
   (context/with-context
@@ -86,4 +87,14 @@
 (defn exec [code options]
   (context/with-context
     "Execute script" {}
-    (sh-script code options)))
+    (let [{:keys [exit out err] :as result} (sh-script code options)]
+      (if (zero? exit)
+        result
+        (assoc result
+          :error {:message (format
+                            "Error executing script :\n :cmd %s\n :out %s\n"
+                            code err)
+                  :type :pallet-script-excution-error
+                  :script-exit exit
+                  :script-out out
+                  :script-err err})))))

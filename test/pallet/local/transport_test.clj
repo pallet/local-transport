@@ -42,11 +42,17 @@
     (filesystem/with-temp-file [tmp-src "src"]
       (filesystem/with-temp-file [tmp-dest "dest"]
         (transport/send-stream
-         (io/input-stream (.getPath tmp-src)) (.getPath tmp-dest))
+         (io/input-stream (.getPath tmp-src)) (.getPath tmp-dest) {})
+        (is (= "src" (slurp tmp-dest))))))
+  (testing "send-stream with mode"
+    (filesystem/with-temp-file [tmp-src "src"]
+      (filesystem/with-temp-file [tmp-dest "dest"]
+        (transport/send-stream
+         (io/input-stream (.getPath tmp-src)) (.getPath tmp-dest) {:mode "644"})
         (is (= "src" (slurp tmp-dest))))))
   (testing "send-text"
     (filesystem/with-temp-file [tmp-dest "dest"]
-      (transport/send-text "src" (.getPath tmp-dest))
+      (transport/send-text "src" (.getPath tmp-dest) {})
       (is (= "src" (slurp tmp-dest)))))
   (testing "receive"
     (filesystem/with-temp-file [tmp-src "src"]

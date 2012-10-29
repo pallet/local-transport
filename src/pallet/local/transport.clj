@@ -69,15 +69,19 @@
     (apply shell/sh (concat (or execv ["/bin/bash"]) [:in in]))))
 
 
-(defn send-stream [source destination]
+(defn send-stream [source destination {:keys [mode]}]
   (context/with-context
     (format "Send to %s" destination) {}
-    (io/copy source (io/file destination))))
+    (io/copy source (io/file destination))
+    (when mode
+      (shell/sh "chmod" destination mode))))
 
-(defn send-text [source destination]
+(defn send-text [source destination {:keys [mode]}]
   (context/with-context
     (format "Send to %s" destination) {}
-    (spit (io/file destination) source)))
+    (spit (io/file destination) source)
+    (when mode
+      (shell/sh "chmod" destination mode))))
 
 (defn receive [source destination]
   (context/with-context

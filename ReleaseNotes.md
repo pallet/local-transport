@@ -1,3 +1,7 @@
+# 0.2.0
+
+- Add options map to send functions, with :mode for target file
+
 # 0.1.1
 
 - Add pallet specific functionality to pallet.shell

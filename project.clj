@@ -5,4 +5,4 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.0"]
-                 [com.palletops/pallet-common "0.4.0-SNAPSHOT"]])
+                 [com.palletops/pallet-common "0.4.0"]])

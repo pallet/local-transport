@@ -1,4 +1,4 @@
-(defproject com.palletops/local-transport "0.4.0-SNAPSHOT"
+(defproject com.palletops/local-transport "0.4.0"
   :description "Functions for executing scripts locally."
   :url "http://palletops.com"
   :license {:name "Eclipse Public License"

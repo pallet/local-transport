@@ -1,3 +1,11 @@
+# 0.4.0
+
+- Update to pallet-common 0.4.0
+
+- Use lein as the build tool
+
+- Remove reflection warnings
+
 # 0.3.0
 
 - Update to clojure 1.4.0

@@ -8,7 +8,7 @@ Functions for executing scripts locally.  Used by
 Add the following to your `:dependencies`:
 
 ```clj
-[org.cloudhoist/local-transport "0.3.0"]
+[com.palletops/local-transport "0.4.0"]
 ```
 
 ## License

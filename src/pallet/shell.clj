@@ -10,15 +10,16 @@
 ; You must not remove this notice, or any other, from this software.
 
 (ns
-  ^{:author "Chris Houser, Stuart Halloway, Hugo Duncan"
-    :doc "Conveniently launch a sub-process providing its stdin and
+    ^{:author "Chris Houser, Stuart Halloway, Hugo Duncan"
+      :doc "Conveniently launch a sub-process providing its stdin and
 collecting its stdout"}
   pallet.shell
   (:use [clojure.java.io :only (as-file copy)])
   (:require
    [clojure.tools.logging :as logging])
-  (:import (java.io OutputStreamWriter ByteArrayOutputStream StringWriter)
-           (java.nio.charset Charset)))
+  (:import
+   (java.io ByteArrayOutputStream InputStream OutputStreamWriter StringWriter)
+   (java.nio.charset Charset)))
 
 (def ^{:dynamic true} *sh-dir* nil)
 (def ^{:dynamic true} *sh-env* nil)
@@ -156,15 +157,15 @@ collecting its stdout"}
     Defaults to 1000ms."}
   output-poll-period (atom 1000))
 
-(defn read-buffer [stream output-f]
+(defn read-buffer [^InputStream stream output-f]
   (let [buffer-size @output-buffer-size
-        bytes (byte-array buffer-size)
+        ^bytes bytes (byte-array buffer-size)
         sb (StringBuilder.)]
     {:sb sb
      :reader (fn []
                (when (pos? (.available stream))
                  (let [num-read (.read stream bytes 0 buffer-size)
-                       s (String. bytes 0 num-read "UTF-8")]
+                       s (String. bytes (int 0) (int num-read) "UTF-8")]
                    (output-f s)
                    (.append sb s)
                    s)))}))
@@ -182,11 +183,10 @@ collecting its stdout"}
   (logging/tracef "sh-script %s" command)
   (if output-f
     (try
-      (let [{:keys [out err proc]} (apply
-                                    sh
-                                    (concat
-                                     (or execv ["/bin/bash"]) ;; TODO generalise
-                                     [:in in :async true]))
+      (let [{:keys [^InputStream out ^InputStream err ^Process proc]}
+            (apply sh (concat
+                       (or execv ["/bin/bash"]) ;; TODO generalise
+                       [:in in :async true]))
             out-reader (read-buffer out output-f)
             err-reader (read-buffer err output-f)
             period @output-poll-period

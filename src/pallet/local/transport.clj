@@ -5,7 +5,9 @@
    [clojure.string :as string]
    [clojure.tools.logging :as logging]
    [pallet.common.context :as context]
-   [pallet.shell :as shell]))
+   [pallet.shell :as shell])
+  (:import
+   [java.io InputStream]))
 
 (def
   ^{:doc "Specifies the buffer size used to read the output stream.
@@ -17,15 +19,15 @@
     Defaults to 1000ms."}
   output-poll-period (atom 1000))
 
-(defn read-buffer [stream output-f]
+(defn read-buffer [^InputStream stream output-f]
   (let [buffer-size @output-buffer-size
-        bytes (byte-array buffer-size)
+        ^bytes bytes (byte-array buffer-size)
         sb (StringBuilder.)]
     {:sb sb
      :reader (fn []
                (when (pos? (.available stream))
                  (let [num-read (.read stream bytes 0 buffer-size)
-                       s (String. bytes 0 num-read "UTF-8")]
+                       s (String. bytes 0 (int num-read) "UTF-8")]
                    (output-f s)
                    (.append sb s)
                    s)))}))
@@ -43,7 +45,7 @@
   (logging/tracef "sh-script %s" command)
   (if output-f
     (try
-      (let [{:keys [out err ^Process proc]}
+      (let [{:keys [^InputStream out ^InputStream err ^Process proc]}
             (apply
              shell/sh
              (concat

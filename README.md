@@ -8,7 +8,7 @@ Functions for executing scripts locally.  Used by
 Add the following to your `:dependencies`:
 
 ```clj
-[com.palletops/local-transport "0.4.0"]
+[com.palletops/local-transport "0.5.0"]
 ```
 
 ## License

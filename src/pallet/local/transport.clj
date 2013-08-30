@@ -36,39 +36,57 @@
   "Run a script on local machine.
 
    Command:
-     :execv  sequence of command and arguments to be run (default /bin/bash).
-     :in     standard input for the process.
+     :execv   sequence of command and arguments to be run (default /bin/bash).
+     :in      standard input for the process.
+     :env-cmd command to modify environment for following commands
+     :env     map of environment values to set
+     :env-fwd sequence of environment values to forward
+     :prefix  a sequence of prefixes for the command (e.g. [\"sudo\" \"-l\"])
    Options:
      :output-f  function to incrementally process output"
-  [{:keys [execv in] :as command}
+  [{:keys [execv in env-cmd env env-fwd prefix] :as command}
    {:keys [output-f] :as options}]
   (logging/tracef "sh-script %s" command)
-  (if output-f
-    (try
-      (let [{:keys [^InputStream out ^InputStream err ^Process proc]}
-            (apply
-             shell/sh
-             (concat
-              (or execv ["/bin/bash"]) ;; TODO generalise
-              [:in in :async true]))
-            out-reader (read-buffer out output-f)
-            err-reader (read-buffer err output-f)
-            period @output-poll-period
-            read-out (:reader out-reader)
-            read-err (:reader err-reader)]
-        (with-open [out out err err]
-          (while (not (try (.exitValue proc)
-                           (catch IllegalThreadStateException _)))
-            (Thread/sleep period)
-            (read-out)
-            (read-err))
-          (while (read-out))
-          (while (read-err))
-          (let [exit (.exitValue proc)]
-            {:exit exit
-             :out (str (:sb out-reader))
-             :err (str (:sb err-reader))}))))
-    (apply shell/sh (concat (or execv ["/bin/bash"]) [:in in]))))
+  (let [execv (seq (concat prefix
+                           (when (or env env-fwd)
+                             (concat
+                              [env-cmd]
+                              (map
+                               (fn [k]
+                                 (str (name k) "=" (System/getenv (name k))))
+                               env-fwd)
+                              (when env
+                                (reduce-kv
+                                 (fn [r k v] (conj r (str (name k) "=" v)))
+                                 []
+                                 env))))
+                           execv))]
+    (if output-f
+      (try
+        (let [{:keys [^InputStream out ^InputStream err ^Process proc]}
+              (apply
+               shell/sh
+               (concat
+                (or execv ["/bin/bash"]) ;; TODO generalise
+                [:in in :async true]))
+              out-reader (read-buffer out output-f)
+              err-reader (read-buffer err output-f)
+              period @output-poll-period
+              read-out (:reader out-reader)
+              read-err (:reader err-reader)]
+          (with-open [out out err err]
+            (while (not (try (.exitValue proc)
+                             (catch IllegalThreadStateException _)))
+              (Thread/sleep period)
+              (read-out)
+              (read-err))
+            (while (read-out))
+            (while (read-err))
+            (let [exit (.exitValue proc)]
+              {:exit exit
+               :out (str (:sb out-reader))
+               :err (str (:sb err-reader))}))))
+      (apply shell/sh (concat (or execv ["/bin/bash"]) [:in in])))))
 
 
 (defn send-stream [source destination {:keys [mode]}]

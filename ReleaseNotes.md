@@ -1,3 +1,9 @@
+# 0.5.0
+
+- Break out components of the command map
+  This allows more freedom for the implementation to process the command
+  map.  Require for proper environment forwarding.
+
 # 0.4.0
 
 - Update to pallet-common 0.4.0
